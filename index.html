@@ -1,907 +1,171 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Controle de Entrada e Saída - ABM / CBMMS</title>
-  <style>
-    :root {
-      --primary: #b91c1c;
-      --primary-dark: #991b1b;
-      --bg: #f3f4f6;
-      --card: #ffffff;
-      --text: #1f2937;
-      --border: #d1d5db;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: Arial, Helvetica, sans-serif;
-      background-color: var(--bg);
-      color: var(--text);
-      padding: 16px;
-    }
-
-    /* PAINEL DE CONTROLE (OCULTO NA IMPRESSÃO) */
-    .app-container {
-      max-width: 1150px;
-      margin: 0 auto 24px auto;
-    }
-
-    .top-banner {
-      background: linear-gradient(135deg, #991b1b, #dc2626);
-      color: #fff;
-      padding: 16px 20px;
-      border-radius: 10px;
-      margin-bottom: 16px;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-
-    .top-banner h1 {
-      font-size: 1.2rem;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .sync-badge {
-      font-size: 0.85rem;
-      padding: 6px 12px;
-      border-radius: 20px;
-      background: rgba(255,255,255,0.2);
-      font-weight: bold;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .sync-badge.online {
-      background: #065f46;
-      color: #d1fae5;
-    }
-
-    .card {
-      background: var(--card);
-      border-radius: 10px;
-      padding: 16px;
-      margin-bottom: 16px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.06);
-      border: 1px solid var(--border);
-    }
-
-    .card-title {
-      font-size: 0.95rem;
-      font-weight: bold;
-      text-transform: uppercase;
-      color: #374151;
-      margin-bottom: 12px;
-      padding-bottom: 6px;
-      border-bottom: 2px solid #e5e7eb;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .grid-form {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 12px;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .form-group label {
-      font-size: 0.78rem;
-      font-weight: bold;
-      color: #4b5563;
-      text-transform: uppercase;
-    }
-
-    .form-group input, .form-group select {
-      padding: 9px 10px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      font-size: 0.92rem;
-      text-transform: uppercase;
-    }
-
-    .time-input-group {
-      display: flex;
-      gap: 6px;
-    }
-
-    .time-input-group input {
-      flex: 1;
-    }
-
-    button {
-      cursor: pointer;
-      border: none;
-      border-radius: 6px;
-      padding: 9px 14px;
-      font-size: 0.85rem;
-      font-weight: bold;
-      transition: opacity 0.15s;
-    }
-
-    button:hover {
-      opacity: 0.9;
-    }
-
-    .btn-primary { background: var(--primary); color: #fff; }
-    .btn-secondary { background: #374151; color: #fff; }
-    .btn-success { background: #059669; color: #fff; }
-    .btn-warning { background: #d97706; color: #fff; }
-    .btn-danger { background: #dc2626; color: #fff; }
-    .btn-sm { padding: 5px 8px; font-size: 0.75rem; }
-
-    .actions-bar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 14px;
-    }
-
-    /* LISTA INTERATIVA PARA CELULAR/PC */
-    .records-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .record-item {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 12px;
-      border: 1px solid #e5e7eb;
-      border-left: 4px solid var(--primary);
-      border-radius: 6px;
-      background: #fafafa;
-      gap: 10px;
-    }
-
-    .record-item.completed {
-      border-left-color: #059669;
-    }
-
-    .record-info {
-      font-size: 0.88rem;
-      line-height: 1.4;
-    }
-
-    .record-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-
-    /* FOLHA OFICIAL DE IMPRESSÃO (MODELO FÍSICO) */
-    .print-sheet-wrapper {
-      max-width: 1150px;
-      margin: 0 auto;
-      background: #fff;
-      padding: 20px;
-      border: 1px solid #ccc;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-      overflow-x: auto;
-    }
-
-    .official-header {
-      text-align: center;
-      font-weight: bold;
-      font-size: 13px;
-      line-height: 1.35;
-      margin-bottom: 12px;
-      text-transform: uppercase;
-      color: #000;
-    }
-
-    .underline-field {
-      display: inline-block;
-      min-width: 36px;
-      border-bottom: 1px solid #000;
-      padding: 0 6px;
-      font-family: "Courier New", Courier, monospace;
-      font-weight: bold;
-    }
-
-    table.official-table {
-      width: 100%;
-      border-collapse: collapse;
-      table-layout: fixed;
-      color: #000;
-    }
-
-    table.official-table th,
-    table.official-table td {
-      border: 1px solid #000;
-      padding: 3px 5px;
-      font-size: 11px;
-      text-align: center;
-      vertical-align: middle;
-      height: 22px;
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      text-transform: uppercase;
-    }
-
-    table.official-table th {
-      font-weight: bold;
-      background-color: #fff;
-    }
-
-    table.official-table td.align-left {
-      text-align: left;
-      padding-left: 6px;
-    }
-
-    /* LARGURAS DAS COLUNAS IGUAIS AO FORMULÁRIO FÍSICO */
-    .col-nome { width: 22%; }
-    .col-placa { width: 10%; }
-    .col-cpf { width: 12%; }
-    .col-hora { width: 7%; }
-    .col-destino { width: 13%; }
-    .col-motivo { width: 13%; }
-    .col-resp { width: 16%; }
-
-    /* MODAL SIMPLES PARA MESCLAGEM / NUVEM */
-    .modal-backdrop {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.6);
-      z-index: 999;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-    }
-
-    .modal-backdrop.active {
-      display: flex;
-    }
-
-    .modal-box {
-      background: #fff;
-      max-width: 550px;
-      width: 100%;
-      border-radius: 10px;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .modal-box textarea, .modal-box input {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 0.85rem;
-    }
-
-    /* CONFIGURAÇÃO DE IMPRESSÃO A4 PAISAGEM */
-    @page {
-      size: A4 landscape;
-      margin: 8mm;
-    }
-
-    @media print {
-      body {
-        background: #fff;
-        padding: 0;
-        margin: 0;
-      }
-      .no-print {
-        display: none !important;
-      }
-      .print-sheet-wrapper {
-        border: none;
-        box-shadow: none;
-        padding: 0;
-        max-width: 100%;
-        width: 100%;
-      }
-      table.official-table th,
-      table.official-table td {
-        font-size: 10.5pt;
-        height: 21px;
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lançamento de Gastos</title>
+    <!-- Adicionando o Tailwind CSS via CDN para o visual -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Meta tag para o celular entender como web app -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
 </head>
-<body>
-
-  <!-- INTERFACE DO APLICATIVO (NÃO SAI NA IMPRESSÃO) -->
-  <div class="app-container no-print">
-    <div class="top-banner">
-      <div>
-        <h1>Controle de Entrada e Saída - ABM / CBMMS</h1>
-        <small>Preenchimento multiusuário em tempo real e geração de folha A4 Paisagem</small>
-      </div>
-      <div>
-        <span id="syncStatusBadge" class="sync-badge">Modo Local (1 Aparelho)</span>
-      </div>
-    </div>
-
-    <!-- CONFIGURAÇÃO DO SERVIÇO E DO MILITAR LOGADO -->
-    <div class="card">
-      <div class="card-title">
-        <span>1. Dados do Serviço e Identificação do Militar</span>
-        <div style="display:flex; gap:6px;">
-          <button class="btn-secondary btn-sm" onclick="openCloudModal()">☁️ Configurar Multi-Usuário (Nuvem)</button>
-          <button class="btn-warning btn-sm" onclick="openMergeModal()">📲 Mesclar via WhatsApp</button>
-        </div>
-      </div>
-      <div class="grid-form">
-        <div class="form-group">
-          <label>Data do Serviço</label>
-          <input type="date" id="serviceDate" onchange="updateServiceDate()">
-        </div>
-        <div class="form-group">
-          <label>Seu Nome / Graduação (Fixo no seu celular)</label>
-          <input type="text" id="currentUserResp" placeholder="Ex: AL SGT MOURA" oninput="saveUserPrefs()">
-        </div>
-        <div class="form-group">
-          <label>Mínimo de Linhas na Folha Impressa</label>
-          <input type="number" id="minRowsInput" value="25" min="15" max="50" onchange="renderAll()">
-        </div>
-      </div>
-    </div>
-
-    <!-- FORMULÁRIO DE LANÇAMENTO -->
-    <div class="card">
-      <div class="card-title">
-        <span id="formTitle">2. Novo Registro de Entrada / Saída</span>
-      </div>
-      <input type="hidden" id="editingId" value="">
-      <div class="grid-form">
-        <div class="form-group">
-          <label>Nome (Civil / Militar)</label>
-          <input type="text" id="inNome" placeholder="Ex: AL SGT MOURA / SGT MONTEIRO">
-        </div>
-        <div class="form-group">
-          <label>Placa</label>
-          <input type="text" id="inPlaca" placeholder="Ex: QAZ3624">
-        </div>
-        <div class="form-group">
-          <label>CPF (Opcional)</label>
-          <input type="text" id="inCpf" placeholder="000.000.000-00">
-        </div>
-        <div class="form-group">
-          <label>Horário Entrada</label>
-          <div class="time-input-group">
-            <input type="time" id="inEntrada">
-            <button type="button" class="btn-secondary btn-sm" onclick="setNow('inEntrada')">Agora</button>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Horário Saída</label>
-          <div class="time-input-group">
-            <input type="time" id="inSaida">
-            <button type="button" class="btn-secondary btn-sm" onclick="setNow('inSaida')">Agora</button>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Destino</label>
-          <input type="text" id="inDestino" placeholder="Ex: MERCADO / TÚNICA">
-        </div>
-        <div class="form-group">
-          <label>Motivo</label>
-          <input type="text" id="inMotivo" placeholder="Ex: CÓDIGO 100 / PROVA TÚNICA">
-        </div>
-        <div class="form-group">
-          <label>Responsável pelos Dados</label>
-          <input type="text" id="inResp" placeholder="Ex: AL SGT MOURA">
-        </div>
-      </div>
-
-      <div class="actions-bar">
-        <button class="btn-primary" onclick="saveRecord()">➕ Salvar Registro</button>
-        <button class="btn-secondary" onclick="clearForm()">Limpar Campos</button>
-        <button class="btn-success" onclick="window.print()" style="margin-left:auto;">🖨️ Imprimir / Salvar PDF (Fim do Dia)</button>
-        <button class="btn-danger btn-sm" onclick="clearAllDay()">🗑️ Zerar Folha do Dia</button>
-      </div>
-    </div>
-
-    <!-- LISTA RÁPIDA PARA ATUALIZAR ENTRADA/SAÍDA A QUALQUER HORA -->
-    <div class="card">
-      <div class="card-title">
-        <span>3. Registros Lançados no Dia (<span id="countBadge">0</span>)</span>
-        <button class="btn-secondary btn-sm" onclick="syncFromCloud(true)">🔄 Atualizar Agora</button>
-      </div>
-      <div id="recordsList" class="records-list"></div>
-    </div>
-  </div>
-
-  <!-- FOLHA OFICIAL (SEMPRE VISÍVEL E PRONTA PARA IMPRESSÃO) -->
-  <div class="print-sheet-wrapper">
-    <div class="official-header">
-      <div>CORPO DE BOMBEIROS MILITAR DE MATO GROSSO DO SUL</div>
-      <div>ACADEMIA DE BOMBEIROS MILITAR</div>
-      <div>RELAÇÃO DE CIVIS/MILITARES QUE ENTRAM E SAEM DO QUARTEL</div>
-      <div style="margin-top:4px;">
-        SERVIÇO DO DIA <span id="printDay" class="underline-field">20</span> DE 
-        <span id="printMonth" class="underline-field" style="min-width:110px;">OUTUBRO</span> DE 
-        <span id="printYear" class="underline-field">2026</span>
-      </div>
-    </div>
-
-    <table class="official-table">
-      <thead>
-        <tr>
-          <th rowspan="2" class="col-nome">NOME</th>
-          <th rowspan="2" class="col-placa">PLACA</th>
-          <th rowspan="2" class="col-cpf">CPF</th>
-          <th colspan="2">HORÁRIO</th>
-          <th rowspan="2" class="col-destino">DESTINO</th>
-          <th rowspan="2" class="col-motivo">MOTIVO</th>
-          <th rowspan="2" class="col-resp">RESPONSÁVEL PELOS<br>DADOS:<br>NOME/GRADUAÇÃO</th>
-        </tr>
-        <tr>
-          <th class="col-hora">ENTRADA</th>
-          <th class="col-hora">SAÍDA</th>
-        </tr>
-      </thead>
-      <tbody id="officialTableBody">
-        <!-- Preenchido dinamicamente -->
-      </tbody>
-    </table>
-  </div>
-
-  <!-- MODAL 1: SINCRONIZAÇÃO EM NUVEM (FIREBASE) -->
-  <div id="cloudModal" class="modal-backdrop no-print">
-    <div class="modal-box">
-      <h3>☁️ Sincronização Multi-Usuário em Tempo Real</h3>
-      <p style="font-size:0.85rem; color:#4b5563;">
-        Cole abaixo a URL do seu <b>Firebase Realtime Database</b> (gratuito). Assim que salvar, você poderá gerar um link para enviar no WhatsApp da equipe e todos preencherão a mesma folha ao vivo.
-      </p>
-      <input type="url" id="firebaseUrlInput" placeholder="https://seu-projeto-default-rtdb.firebaseio.com">
-      <div style="display:flex; gap:8px; flex-wrap:wrap;">
-        <button class="btn-primary" onclick="saveCloudConfig()">Salvar e Conectar</button>
-        <button class="btn-success" onclick="copyTeamLink()">🔗 Copiar Link da Equipe (WhatsApp)</button>
-        <button class="btn-danger btn-sm" onclick="disconnectCloud()">Desconectar</button>
-        <button class="btn-secondary" style="margin-left:auto;" onclick="closeModals()">Fechar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL 2: MESCLAGEM MANUAL VIA WHATSAPP -->
-  <div id="mergeModal" class="modal-backdrop no-print">
-    <div class="modal-box">
-      <h3>📲 Reunir Dados de Outros Celulares (Sem Nuvem)</h3>
-      <p style="font-size:0.84rem; color:#4b5563;">
-        Se cada militar preencheu offline no próprio celular, clique em <b>Copiar Meus Registros</b> e envie no WhatsApp. O responsável pelo fechamento cola os códigos abaixo e clica em <b>Mesclar</b>:
-      </p>
-      <button class="btn-success" onclick="exportToClipboard()">📋 Copiar Meus Registros para o WhatsApp</button>
-      <textarea id="mergeTextarea" rows="5" placeholder="Cole aqui o código recebido pelo WhatsApp de outro militar..."></textarea>
-      <div style="display:flex; gap:8px;">
-        <button class="btn-primary" onclick="importAndMerge()">➕ Mesclar na Folha Atual</button>
-        <button class="btn-secondary" style="margin-left:auto;" onclick="closeModals()">Fechar</button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    const STORAGE_KEY = 'abm_cbmms_controle_v1';
-    const USER_PREF_KEY = 'abm_cbmms_user_pref';
-    const CLOUD_URL_KEY = 'abm_cbmms_firebase_url';
-
-    const MESES = [
-      'JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO',
-      'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'
-    ];
-
-    let state = {
-      serviceDate: new Date().toISOString().slice(0, 10),
-      records: []
-    };
-
-    let firebaseBaseUrl = '';
-    let pollInterval = null;
-
-    // INICIALIZAÇÃO
-    window.addEventListener('DOMContentLoaded', () => {
-      // Verifica se o link veio com ?db= para configurar nuvem automaticamente
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('db')) {
-        const cleanUrl = params.get('db').replace(/\/+\$/, '');
-        localStorage.setItem(CLOUD_URL_KEY, cleanUrl);
-      }
-
-      firebaseBaseUrl = localStorage.getItem(CLOUD_URL_KEY) || '';
-      document.getElementById('firebaseUrlInput').value = firebaseBaseUrl;
-
-      // Carrega estado local
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        try { state = JSON.parse(saved); } catch (e) {}
-      }
-
-      // Carrega militar responsável padrão do aparelho
-      const savedUser = localStorage.getItem(USER_PREF_KEY) || '';
-      document.getElementById('currentUserResp').value = savedUser;
-      document.getElementById('inResp').value = savedUser;
-
-      document.getElementById('serviceDate').value = state.serviceDate;
-
-      renderAll();
-
-      if (firebaseBaseUrl) {
-        updateSyncBadge(true);
-        syncFromCloud(false);
-        pollInterval = setInterval(() => syncFromCloud(false), 6000);
-      }
-    });
-
-    function saveUserPrefs() {
-      const val = document.getElementById('currentUserResp').value.toUpperCase();
-      localStorage.setItem(USER_PREF_KEY, val);
-      if (!document.getElementById('editingId').value) {
-        document.getElementById('inResp').value = val;
-      }
-    }
-
-    function setNow(inputId) {
-      const now = new Date();
-      const hh = String(now.getHours()).padStart(2, '0');
-      const mm = String(now.getMinutes()).padStart(2, '0');
-      document.getElementById(inputId).value = `${hh}:${mm}`;
-    }
-
-    function updateServiceDate() {
-      const newDate = document.getElementById('serviceDate').value;
-      if (newDate) {
-        state.serviceDate = newDate;
-        persistState();
-        if (firebaseBaseUrl) syncFromCloud(true);
-        renderAll();
-      }
-    }
-
-    function saveRecord() {
-      const nome = document.getElementById('inNome').value.trim().toUpperCase();
-      const placa = document.getElementById('inPlaca').value.trim().toUpperCase();
-      const cpf = document.getElementById('inCpf').value.trim().toUpperCase();
-      const entrada = document.getElementById('inEntrada').value.trim();
-      const saida = document.getElementById('inSaida').value.trim();
-      const destino = document.getElementById('inDestino').value.trim().toUpperCase();
-      const motivo = document.getElementById('inMotivo').value.trim().toUpperCase();
-      const resp = (document.getElementById('inResp').value.trim() || document.getElementById('currentUserResp').value.trim()).toUpperCase();
-
-      if (!nome && !placa) {
-        alert('Informe pelo menos o NOME ou a PLACA.');
-        return;
-      }
-
-      const editingId = document.getElementById('editingId').value;
-
-      if (editingId) {
-        const idx = state.records.findIndex(r => r.id === editingId);
-        if (idx > -1) {
-          state.records[idx] = {
-            ...state.records[idx],
-            nome, placa, cpf, entrada, saida, destino, motivo, resp,
-            updatedAt: Date.now()
-          };
-        }
-      } else {
-        const newRec = {
-          id: 'rec_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
-          nome, placa, cpf, entrada, saida, destino, motivo, resp,
-          createdAt: Date.now(),
-          updatedAt: Date.now()
-        };
-        state.records.push(newRec);
-      }
-
-      clearForm();
-      persistState();
-      renderAll();
-      pushToCloud();
-    }
-
-    function quickTimeUpdate(id, field) {
-      const now = new Date();
-      const timeStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
-      const idx = state.records.findIndex(r => r.id === id);
-      if (idx > -1) {
-        state.records[idx][field] = timeStr;
-        state.records[idx].updatedAt = Date.now();
-        const currentUser = document.getElementById('currentUserResp').value.trim().toUpperCase();
-        if (currentUser && !state.records[idx].resp) {
-          state.records[idx].resp = currentUser;
-        }
-        persistState();
-        renderAll();
-        pushToCloud();
-      }
-    }
-
-    function editRecord(id) {
-      const rec = state.records.find(r => r.id === id);
-      if (!rec) return;
-      document.getElementById('editingId').value = rec.id;
-      document.getElementById('inNome').value = rec.nome || '';
-      document.getElementById('inPlaca').value = rec.placa || '';
-      document.getElementById('inCpf').value = rec.cpf || '';
-      document.getElementById('inEntrada').value = rec.entrada || '';
-      document.getElementById('inSaida').value = rec.saida || '';
-      document.getElementById('inDestino').value = rec.destino || '';
-      document.getElementById('inMotivo').value = rec.motivo || '';
-      document.getElementById('inResp').value = rec.resp || '';
-      document.getElementById('formTitle').innerText = '2. Editando Registro Selecionado';
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function deleteRecord(id) {
-      if (!confirm('Deseja remover este registro da folha?')) return;
-      state.records = state.records.filter(r => r.id !== id);
-      persistState();
-      renderAll();
-      if (firebaseBaseUrl) {
-        fetch(`${firebaseBaseUrl}/servicos/${state.serviceDate}/${id}.json`, { method: 'DELETE' }).catch(() => {});
-      }
-    }
-
-    function clearForm() {
-      document.getElementById('editingId').value = '';
-      document.getElementById('inNome').value = '';
-      document.getElementById('inPlaca').value = '';
-      document.getElementById('inCpf').value = '';
-      document.getElementById('inEntrada').value = '';
-      document.getElementById('inSaida').value = '';
-      document.getElementById('inDestino').value = '';
-      document.getElementById('inMotivo').value = '';
-      document.getElementById('inResp').value = document.getElementById('currentUserResp').value.toUpperCase();
-      document.getElementById('formTitle').innerText = '2. Novo Registro de Entrada / Saída';
-    }
-
-    function clearAllDay() {
-      if (!confirm('Tem certeza que deseja zerar todos os registros desta data?')) return;
-      state.records = [];
-      persistState();
-      renderAll();
-      if (firebaseBaseUrl) {
-        fetch(`${firebaseBaseUrl}/servicos/${state.serviceDate}.json`, { method: 'DELETE' }).catch(() => {});
-      }
-    }
-
-    function persistState() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    }
-
-    // RENDERIZAÇÃO DA LISTA E DA FOLHA OFICIAL
-    function renderAll() {
-      // Atualiza cabeçalho da data oficial
-      const parts = (state.serviceDate || '2026-10-20').split('-');
-      const year = parts[0];
-      const monthIdx = parseInt(parts[1], 10) - 1;
-      const day = parts[2];
-
-      document.getElementById('printDay').innerText = day;
-      document.getElementById('printMonth').innerText = MESES[monthIdx] || '';
-      document.getElementById('printYear').innerText = year;
-
-      // Ordena registros por ordem de criação
-      const sorted = [...state.records].sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
-      document.getElementById('countBadge').innerText = sorted.length;
-
-      // 1. Lista interativa
-      const listEl = document.getElementById('recordsList');
-      if (sorted.length === 0) {
-        listEl.innerHTML = '<div style="color:#6b7280; font-size:0.85rem;">Nenhum registro lançado ainda hoje.</div>';
-      } else {
-        listEl.innerHTML = sorted.map((r, i) => {
-          const isComplete = r.entrada && r.saida;
-          return `
-            <div class="record-item ${isComplete ? 'completed' : ''}">
-              <div class="record-info">
-                <strong>#${i + 1} - ${escapeHtml(r.nome || 'SEM NOME')}</strong>
-                ${r.placa ? ` | Placa: <b>\${escapeHtml(r.placa)}</b>` : ''}
-                ${r.cpf ? ` | CPF: \${escapeHtml(r.cpf)}` : ''}<br>
-                <span>Entrada: <b>${r.entrada || '--:--'}</b> | Saída: <b>${r.saida || '--:--'}</b></span>
-                ${r.destino ? ` | Destino: \${escapeHtml(r.destino)}` : ''}
-                ${r.motivo ? ` | Motivo: \${escapeHtml(r.motivo)}` : ''}
-                | Resp: <b>${escapeHtml(r.resp || '-')}</b>
-              </div>
-              <div class="record-actions">
-                ${!r.entrada ? `<button class="btn-success btn-sm" onclick="quickTimeUpdate('\${r.id}', 'entrada')">⏱️ Entrada Agora</button>` : ''}
-                ${!r.saida ? `<button class="btn-warning btn-sm" onclick="quickTimeUpdate('\${r.id}', 'saida')">⏱️ Saída Agora</button>` : ''}
-                <button class="btn-secondary btn-sm" onclick="editRecord('${r.id}')">✏️ Editar</button>
-                <button class="btn-danger btn-sm" onclick="deleteRecord('${r.id}')">✖</button>
-              </div>
+<body class="bg-gray-100 p-4 font-sans min-h-screen">
+    <div class="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden p-6">
+        <h1 class="text-2xl font-bold text-center text-green-700 mb-6">Lançamento Rápido</h1>
+        
+        <form id="gastosForm" class="space-y-4">
+            <!-- Valor -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Valor (R$)</label>
+                <input type="number" id="valor" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3 border focus:ring-green-500 focus:border-green-500 text-lg" placeholder="0,00" required>
             </div>
-          `;
-        }).join('');
-      }
 
-      // 2. Tabela Oficial de Impressão
-      const minRows = parseInt(document.getElementById('minRowsInput').value, 10) || 25;
-      const totalRows = Math.max(minRows, sorted.length);
-      let rowsHtml = '';
+            <!-- Descrição -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Descrição</label>
+                <input type="text" id="descricao" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3 border focus:ring-green-500 focus:border-green-500" placeholder="Ex: Energia, Pão, Gasolina..." required>
+            </div>
 
-      for (let i = 0; i < totalRows; i++) {
-        const r = sorted[i];
-        if (r) {
-          rowsHtml += `
-            <tr>
-              <td class="align-left">${escapeHtml(r.nome)}</td>
-              <td>${escapeHtml(r.placa)}</td>
-              <td>${escapeHtml(r.cpf)}</td>
-              <td>${escapeHtml(r.entrada)}</td>
-              <td>${escapeHtml(r.saida)}</td>
-              <td>${escapeHtml(r.destino)}</td>
-              <td>${escapeHtml(r.motivo)}</td>
-              <td class="align-left">${escapeHtml(r.resp)}</td>
-            </tr>
-          `;
-        } else {
-          rowsHtml += `
-            <tr>
-              <td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-            </tr>
-          `;
+            <!-- Forma de Pagamento -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Forma de Pagamento</label>
+                <select id="formaPagamento" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3 border focus:ring-green-500 focus:border-green-500 bg-white">
+                    <option value="PIX">PIX</option>
+                    <option value="Cartão Nubank">Cartão Nubank</option>
+                    <option value="Cartão Mercado Pago">Cartão Mercado Pago</option>
+                    <option value="Cartão Porto Seguro">Cartão Porto Seguro</option>
+                    <option value="Cartão Magalu">Cartão Magalu</option>
+                    <option value="Débito">Débito</option>
+                    <option value="Dinheiro">Dinheiro</option>
+                </select>
+            </div>
+
+            <!-- Categoria -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Categoria</label>
+                <select id="categoria" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3 border focus:ring-green-500 focus:border-green-500 bg-white">
+                    <option value="Conta Fixa">Conta Fixa (Água, Luz, Internet...)</option>
+                    <option value="Alimentação">Alimentação (Mercado, Padaria)</option>
+                    <option value="Transporte">Transporte (Combustível, Uber)</option>
+                    <option value="Compra Parcelada">Compra Parcelada</option>
+                    <option value="Lazer">Lazer</option>
+                    <option value="Saúde">Saúde / Farmácia</option>
+                    <option value="Outros">Outros</option>
+                </select>
+            </div>
+
+            <!-- Quem Lançou e Data -->
+            <div class="flex space-x-4">
+                <div class="w-1/2">
+                    <label class="block text-sm font-medium text-gray-700">Quem?</label>
+                    <select id="quemLancou" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3 border bg-white">
+                        <option value="João">João</option>
+                        <option value="Esposa">Esposa</option>
+                    </select>
+                </div>
+                <div class="w-1/2">
+                    <label class="block text-sm font-medium text-gray-700">Data</label>
+                    <input type="date" id="data" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3 border" required>
+                </div>
+            </div>
+
+            <button type="submit" class="w-full bg-green-600 text-white font-bold py-3 px-4 rounded-md hover:bg-green-700 transition duration-200">
+                Lançar Gasto
+            </button>
+        </form>
+    </div>
+
+    <!-- Histórico Recente e Total -->
+    <div class="max-w-md mx-auto mt-6 bg-white rounded-xl shadow-md overflow-hidden p-6 mb-10">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold text-gray-800">Lançamentos Locais</h2>
+            <span class="text-lg font-bold text-red-600">Total: R$ <span id="totalGastos">0,00</span></span>
+        </div>
+        
+        <ul id="listaGastos" class="divide-y divide-gray-200">
+            <!-- Itens serão renderizados aqui pelo Javascript -->
+        </ul>
+        <div class="mt-4 text-xs text-gray-400 text-center">
+            *Os dados deste arquivo HTML ficam salvos apenas no seu navegador.
+        </div>
+    </div>
+
+    <!-- Javascript embutido para fazer o app funcionar sem servidores -->
+    <script>
+        // Seta a data de hoje por padrão
+        document.getElementById('data').valueAsDate = new Date();
+        
+        // Carrega os gastos salvos na memória do navegador (localStorage)
+        let gastos = JSON.parse(localStorage.getItem('gastosAppLocal')) || [];
+
+        function renderizarGastos() {
+            const lista = document.getElementById('listaGastos');
+            const spanTotal = document.getElementById('totalGastos');
+            
+            lista.innerHTML = '';
+            let total = 0;
+
+            if (gastos.length === 0) {
+                lista.innerHTML = '<li class="text-gray-500 text-center py-4">Nenhum gasto lançado ainda.</li>';
+            } else {
+                gastos.forEach(gasto => {
+                    total += gasto.valor;
+                    const li = document.createElement('li');
+                    li.className = 'py-3 flex justify-between items-center';
+                    li.innerHTML = `
+                        <div>
+                            <p class="font-semibold text-gray-800">${gasto.descricao}</p>
+                            <p class="text-xs text-gray-500">${gasto.formaPagamento} &bull; ${gasto.categoria} &bull; ${gasto.quemLancou}</p>
+                        </div>
+                        <span class="font-bold text-gray-700">R$ ${gasto.valor.toFixed(2).replace('.', ',')}</span>
+                    `;
+                    lista.appendChild(li);
+                });
+            }
+            // Atualiza o total
+            spanTotal.innerText = total.toFixed(2).replace('.', ',');
         }
-      }
-      document.getElementById('officialTableBody').innerHTML = rowsHtml;
-    }
 
-    // SINCRONIZAÇÃO EM NUVEM (FIREBASE REST API)
-    function openCloudModal() {
-      document.getElementById('cloudModal').classList.add('active');
-    }
-    function openMergeModal() {
-      document.getElementById('mergeModal').classList.add('active');
-    }
-    function closeModals() {
-      document.getElementById('cloudModal').classList.remove('active');
-      document.getElementById('mergeModal').classList.remove('active');
-    }
+        document.getElementById('gastosForm').addEventListener('submit', function(e) {
+            e.preventDefault(); // Evita recarregar a página
+            
+            const valor = parseFloat(document.getElementById('valor').value);
+            const descricao = document.getElementById('descricao').value;
+            const formaPagamento = document.getElementById('formaPagamento').value;
+            const categoria = document.getElementById('categoria').value;
+            const quemLancou = document.getElementById('quemLancou').value;
+            const data = document.getElementById('data').value;
 
-    function saveCloudConfig() {
-      const url = document.getElementById('firebaseUrlInput').value.trim().replace(/\/+\$/, '');
-      if (!url.startsWith('https://')) {
-        alert('Insira uma URL válida começando com https://');
-        return;
-      }
-      firebaseBaseUrl = url;
-      localStorage.setItem(CLOUD_URL_KEY, firebaseBaseUrl);
-      updateSyncBadge(true);
-      pushToCloud();
-      syncFromCloud(true);
-      if (!pollInterval) {
-        pollInterval = setInterval(() => syncFromCloud(false), 6000);
-      }
-      alert('Conectado com sucesso! Use o botão "Copiar Link da Equipe" para enviar aos outros militares.');
-    }
+            if (!valor || !descricao) return;
 
-    function disconnectCloud() {
-      firebaseBaseUrl = '';
-      localStorage.removeItem(CLOUD_URL_KEY);
-      if (pollInterval) clearInterval(pollInterval);
-      pollInterval = null;
-      updateSyncBadge(false);
-      closeModals();
-    }
+            // Cria o objeto do gasto
+            const novoGasto = { 
+                id: Date.now(), 
+                valor: valor, 
+                descricao: descricao, 
+                formaPagamento: formaPagamento, 
+                categoria: categoria, 
+                quemLancou: quemLancou, 
+                data: data 
+            };
 
-    function copyTeamLink() {
-      const url = document.getElementById('firebaseUrlInput').value.trim().replace(/\/+\$/, '');
-      if (!url) {
-        alert('Salve primeiro a URL do Firebase.');
-        return;
-      }
-      const shareUrl = `${window.location.origin}${window.location.pathname}?db=${encodeURIComponent(url)}`;
-      navigator.clipboard.writeText(shareUrl);
-      alert('Link da equipe copiado! Envie no WhatsApp do serviço. Quem abrir já estará sincronizado.');
-    }
+            // Adiciona no início da lista
+            gastos.unshift(novoGasto);
+            
+            // Salva na memória do navegador
+            localStorage.setItem('gastosAppLocal', JSON.stringify(gastos));
 
-    function updateSyncBadge(isOnline) {
-      const badge = document.getElementById('syncStatusBadge');
-      if (isOnline) {
-        badge.className = 'sync-badge online';
-        badge.innerText = '🟢 Sincronizado em Nuvem (Multi-Usuário)';
-      } else {
-        badge.className = 'sync-badge';
-        badge.innerText = 'Modo Local (1 Aparelho)';
-      }
-    }
-
-    async function pushToCloud() {
-      if (!firebaseBaseUrl) return;
-      try {
-        const payload = {};
-        state.records.forEach(r => { payload[r.id] = r; });
-        await fetch(`${firebaseBaseUrl}/servicos/${state.serviceDate}.json`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+            // Limpa apenas o valor e descrição para facilitar lançamentos em sequência
+            document.getElementById('valor').value = '';
+            document.getElementById('descricao').value = '';
+            
+            // Re-renderiza a lista
+            renderizarGastos();
         });
-      } catch (e) {
-        console.warn('Falha ao enviar para nuvem:', e);
-      }
-    }
 
-    async function syncFromCloud(showAlert) {
-      if (!firebaseBaseUrl) return;
-      try {
-        const res = await fetch(`${firebaseBaseUrl}/servicos/${state.serviceDate}.json`);
-        if (!res.ok) return;
-        const data = await res.json();
-        if (data && typeof data === 'object') {
-          const remoteRecords = Object.values(data);
-          mergeRecordLists(remoteRecords);
-          persistState();
-          renderAll();
-        }
-        if (showAlert) alert('Dados sincronizados com a nuvem!');
-      } catch (e) {
-        if (showAlert) alert('Não foi possível conectar ao banco em nuvem.');
-      }
-    }
-
-    // MESCLAGEM INTELIGENTE (EVITA DUPLICATAS E MANTÉM ATUALIZAÇÃO MAIS RECENTE)
-    function mergeRecordLists(incomingList) {
-      const map = new Map();
-      state.records.forEach(r => map.set(r.id, r));
-      incomingList.forEach(inc => {
-        if (!inc || !inc.id) return;
-        const existing = map.get(inc.id);
-        if (!existing || (inc.updatedAt || 0) >= (existing.updatedAt || 0)) {
-          map.set(inc.id, inc);
-        }
-      });
-      state.records = Array.from(map.values());
-    }
-
-    function exportToClipboard() {
-      const code = JSON.stringify(state.records);
-      navigator.clipboard.writeText(code);
-      alert('Código copiado! Cole no WhatsApp e envie para o militar que vai fechar a folha.');
-    }
-
-    function importAndMerge() {
-      const raw = document.getElementById('mergeTextarea').value.trim();
-      if (!raw) return;
-      try {
-        const incoming = JSON.parse(raw);
-        if (Array.isArray(incoming)) {
-          mergeRecordLists(incoming);
-          persistState();
-          renderAll();
-          pushToCloud();
-          document.getElementById('mergeTextarea').value = '';
-          closeModals();
-          alert('Registros mesclados com sucesso na folha única!');
-        }
-      } catch (e) {
-        alert('Código inválido. Certifique-se de copiar o texto completo enviado pelo WhatsApp.');
-      }
-    }
-
-    function escapeHtml(str) {
-      if (!str) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
-    }
-  </script>
+        // Chamada inicial
+        renderizarGastos();
+    </script>
 </body>
 </html>
